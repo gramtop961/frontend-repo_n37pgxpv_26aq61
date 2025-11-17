@@ -1,27 +1,39 @@
-import { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import Auth from './components/Auth'
+import Home from './components/Home'
+import Confirmation from './components/Confirmation'
+import Profile from './components/Profile'
 
-function App() {
-  const [count, setCount] = useState(0)
+function App(){
+  const [user, setUser] = useState(null)
+  const [screen, setScreen] = useState('auth') // auth | home | confirm | profile
+
+  useEffect(()=>{
+    const cached = localStorage.getItem('user')
+    if (cached){
+      setUser(JSON.parse(cached))
+      setScreen('home')
+    }
+  }, [])
+
+  function handleAuthed(u){
+    setUser(u)
+    localStorage.setItem('user', JSON.stringify(u))
+    setScreen('home')
+  }
+
+  function handleLogout(){
+    setUser(null)
+    localStorage.removeItem('user')
+    setScreen('auth')
+  }
+
+  if (screen === 'auth') return <Auth onAuthed={handleAuthed} />
+  if (screen === 'confirm') return <Confirmation onDone={()=>setScreen('home')} />
+  if (screen === 'profile') return <Profile user={user} onBack={()=>setScreen('home')} onUpdate={(u)=>{ setUser(u); localStorage.setItem('user', JSON.stringify(u)) }} />
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Vibe Coding Platform
-        </h1>
-        <p className="text-gray-600 mb-6">
-          Your AI-powered development environment
-        </p>
-        <div className="text-center">
-          <button
-            onClick={() => setCount(count + 1)}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
-          >
-            Count is {count}
-          </button>
-        </div>
-      </div>
-    </div>
+    <Home user={user} onLogout={handleLogout} onConfirmed={()=>setScreen('confirm')} />
   )
 }
 
